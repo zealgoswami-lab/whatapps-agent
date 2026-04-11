@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+httpx==0.25.1
+transformers==4.35.2
+torch>=2.0.0
+numpy>=1.24.0
+requests==2.31.0
+
+# Optional: For Agno-like orchestration (Phase 2+)
+# agno==0.1.0  # To be determined once verified on PyPI
+langchain==0.1.0

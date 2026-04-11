@@ -1,0 +1,78 @@
+{
+  "bailey": {
+    "sessionPath": "auth_info_baileys",
+    "reconnectRetries": 5,
+    "reconnectDelayMs": 1000,
+    "messageTimeout": 30000,
+    "rateLimitMs": 100
+  },
+  "orchestrator": {
+    "pythonServiceUrl": "http://localhost:8000",
+    "pythonPort": 8000,
+    "requestTimeout": 30000,
+    "retryAttempts": 3,
+    "retryDelayMs": 1000,
+    "messageQueueCheckInterval": 100,
+    "messageProcessingDelayMs": 200
+  },
+  "summarization": {
+    "minLength": 100,
+    "maxLength": 150,
+    "triggerLength": 500,
+    "model": "facebook/bart-large-cnn",
+    "useGpu": false
+  },
+  "mentionDetection": {
+    "enabled": true,
+    "triggerAlert": true,
+    "requireMentionForAlert": false
+  },
+  "alerts": {
+    "enabled": true,
+    "method": "whatsapp",
+    "cooldownMinutes": 5,
+    "urgencyLevels": {
+      "high": {
+        "icon": "🔴",
+        "sendImmediately": true
+      },
+      "medium": {
+        "icon": "🟡",
+        "sendImmediately": false
+      },
+      "low": {
+        "icon": "🟢",
+        "sendImmediately": false
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "directory": "./logs",
+    "maxFiles": 5,
+    "maxSizeMb": 5,
+    "format": "json",
+    "console": true,
+    "file": true
+  },
+  "features": {
+    "phase1": {
+      "qrLogin": true,
+      "messageCapture": true,
+      "basicLogging": true
+    },
+    "phase2": {
+      "summarization": true,
+      "mentionDetection": true,
+      "alerting": true
+    },
+    "phase3": {
+      "dailyDigest": false,
+      "weeklyDigest": false,
+      "googleCalendar": false,
+      "notion": false,
+      "trello": false,
+      "dashboard": false
+    }
+  }
+}

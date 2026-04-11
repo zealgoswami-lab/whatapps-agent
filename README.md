@@ -14,7 +14,20 @@ An AI agent that connects to WhatsApp via **Bailey** (QR code login), orchestrat
 - ✅ Optional integrations with Google Calendar, Notion, Trello (Phase 3)
 - ✅ Runs locally or on cloud (Node.js + Python service)
 
-## 📂 Architecture
+## �️ Setup Instructions
+
+### Prerequisites
+- Node.js 16+ 
+- Python 3.8+
+- pip or conda for package management
+
+### Installation
+1. Clone the repository
+2. Install dependencies: `npm install` and `pip install -r requirements.txt`
+3. Configure settings in `config/default.json`
+4. Start the application
+
+## �📂 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

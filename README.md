@@ -1,6 +1,6 @@
 # 📱 WhatsApp AI Agent
 
-An AI agent that connects to WhatsApp via **Bailey** (QR code login), orchestrates analysis with **Agno**, and uses lightweight open-source models to **summarize group discussions** and **alert you when you need to reply**.
+An AI agent that connects to WhatsApp via **Bailey** (QR code login), orchestrates analysis with **Agno**, and uses lightweight open-source models to **summarize group discussions** and **alert you when you need to reply**. and agentic application
 
 ## 🚀 Features
 

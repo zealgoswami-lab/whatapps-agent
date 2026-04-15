@@ -52,4 +52,7 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true })
 }
 
+// Add trace method as alias to debug (required for Baileys library compatibility)
+logger.trace = logger.debug
+
 export default logger

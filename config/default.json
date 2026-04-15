@@ -1,6 +1,6 @@
 {
-  "bailey": {
-    "sessionPath": "auth_info_baileys",
+  "whatsappweb": {
+    "sessionPath": "auth_info_whatsapp",
     "reconnectRetries": 5,
     "reconnectDelayMs": 1000,
     "messageTimeout": 30000,

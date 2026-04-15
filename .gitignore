@@ -12,8 +12,11 @@ pip-log.txt
 .env.local
 .env.*.local
 
-# Bailey WhatsApp Session
-auth_info_baileys/
+# WhatsApp Web Session
+auth_info_whatsapp/
+
+# QR Codes
+qr_codes/
 
 # Logs
 logs/

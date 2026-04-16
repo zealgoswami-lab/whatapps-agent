@@ -87,6 +87,64 @@ app.get('/stats', (req, res) => {
 })
 
 /**
+ * Process all messages from groups through Agno orchestrator
+ */
+app.post('/process-all-messages', async (req, res) => {
+  try {
+    const messagesPerGroup = parseInt(req.query.limit) || 100
+    
+    logger.info('📨 Processing all messages from groups...')
+    const socket = checkSocketReady()
+    const allMessages = await getAllGroupMessages(socket, messagesPerGroup)
+    
+    let totalQueued = 0
+    const groupStats = {}
+
+    for (const [groupId, messages] of Object.entries(allMessages)) {
+      let groupMessageCount = 0
+      
+      for (const msg of messages) {
+        const processableMessage = {
+          jid: groupId,
+          sender: msg.sender,
+          senderName: msg.senderName,
+          messageId: msg.id,
+          timestamp: msg.timestamp,
+          text: msg.text,
+          isGroup: msg.isGroupMsg,
+          messageType: msg.type,
+          mentions: [],
+        }
+        enqueueForProcessing(processableMessage)
+        totalQueued++
+        groupMessageCount++
+      }
+      
+      groupStats[groupId] = groupMessageCount
+    }
+
+    logger.info(`✅ Queued ${totalQueued} messages for processing`)
+    
+    res.json({
+      success: true,
+      totalGroupsProcessed: Object.keys(allMessages).length,
+      totalMessagesQueued: totalQueued,
+      groupStats: groupStats,
+      timestamp: new Date().toISOString(),
+      _next: `Check /stats to monitor processing queue`
+    })
+  } catch (error) {
+    logger.error('Error processing all messages:', error)
+    const status = error.status || 500
+    res.status(status).json({
+      success: false,
+      error: error.message || error,
+      hint: error.hint,
+    })
+  }
+})
+
+/**
  * Manually process a test message
  */
 app.post('/test-message', (req, res) => {
@@ -470,10 +528,45 @@ async function startApp() {
     logger.info('📱 Initializing WhatsApp session...')
     socket = await initializeWhatsAppSession()
 
-    // Setup message listener
+    // Setup message listener for incoming messages
     logger.info('👂 Setting up message listener...')
     setupMessageListener(socket, (message) => {
       enqueueForProcessing(message)
+    })
+
+    // Setup event handler to load all messages once connected
+    socket.on('ready', async () => {
+      logger.info('📨 WhatsApp connection ready. Loading all historical messages...')
+      
+      try {
+        // Fetch all group messages
+        const allGroupMessages = await getAllGroupMessages(socket, 100)
+        let totalMessagesQueued = 0
+
+        for (const [groupId, messages] of Object.entries(allGroupMessages)) {
+          for (const msg of messages) {
+            // Convert to standard format and enqueue
+            const processableMessage = {
+              jid: groupId,
+              sender: msg.sender,
+              senderName: msg.senderName,
+              messageId: msg.id,
+              timestamp: msg.timestamp,
+              text: msg.text,
+              isGroup: msg.isGroupMsg,
+              messageType: msg.type,
+              mentions: [],
+            }
+            enqueueForProcessing(processableMessage)
+            totalMessagesQueued++
+          }
+        }
+
+        logger.info(`✅ Queued ${totalMessagesQueued} historical messages for processing`)
+      } catch (error) {
+        logger.error('Error loading historical messages:', error.message)
+        logger.warn('Continuing with real-time message processing...')
+      }
     })
 
     // Initialize orchestrator
@@ -499,6 +592,7 @@ async function startApp() {
       logger.info('📋 GROUP ENDPOINTS:')
       logger.info(`  GET  http://localhost:${PORT}/groups - List all groups`)
       logger.info(`  GET  http://localhost:${PORT}/groups/messages/all - Get messages from all groups`)
+      logger.info(`  POST http://localhost:${PORT}/process-all-messages - Process all group messages through Agno`)
       logger.info(`  GET  http://localhost:${PORT}/groups/:groupId/info - Get group details`)
       logger.info(`  GET  http://localhost:${PORT}/groups/:groupId/messages - Get group messages`)
       logger.info(`  GET  http://localhost:${PORT}/groups/:groupId/search?q=text - Search group messages`)

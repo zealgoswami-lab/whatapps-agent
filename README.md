@@ -353,7 +353,7 @@ MIT License — See LICENSE file for details
 
 - **Issues**: Open a GitHub issue
 - **Discussions**: Start a GitHub discussion
-- **Email**: contact@example.com
+- **Email**: zeal_goswami@yahoo.com
 
 ---
 

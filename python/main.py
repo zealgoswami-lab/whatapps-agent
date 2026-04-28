@@ -141,6 +141,11 @@ async def summarize(request: SummarizeRequest):
         Summarized text with metadata
     """
     try:
+        print(f'📥 [PYTHON] Received summarize request')
+        print(f'   Text length: {len(request.text)} chars')
+        print(f'   First 100 chars: {request.text[:100]}...')
+        print(f'   Max length: {request.max_length}, Min length: {request.min_length}')
+        
         if len(request.text.strip()) < 100:
             raise HTTPException(
                 status_code=400,
@@ -154,6 +159,8 @@ async def summarize(request: SummarizeRequest):
             min_length=request.min_length
         )
 
+        print(f'✅ [PYTHON] Summarization complete')
+        print(f'   Summary: {summary}')
         logger.info(f'✅ Summarization complete ({len(summary)} chars)')
         return SummarizeResponse(
             summary=summary,
@@ -162,6 +169,7 @@ async def summarize(request: SummarizeRequest):
         )
 
     except Exception as e:
+        print(f'❌ [PYTHON] Error during summarization: {str(e)}')
         logger.error(f'Error during summarization: {str(e)}')
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -179,10 +187,19 @@ async def detect_mentions(request: MentionDetectionRequest):
         Detected mentions, action items, and urgency level
     """
     try:
+        print(f'📥 [PYTHON] Received detect-mentions request')
+        print(f'   From sender: {request.sender}')
+        print(f'   Group ID: {request.group_id}')
+        print(f'   Message: {request.message_text[:100]}...')
+        
         logger.debug(f'Detecting mentions in message from {request.sender}')
         
         mentions, actions, urgency = detect_mentions_and_tasks(request.message_text)
 
+        print(f'✅ [PYTHON] Mentions detected: {mentions}')
+        print(f'   Action items: {actions}')
+        print(f'   Urgency: {urgency}')
+        
         logger.info(f'✅ Mentions detected: {len(mentions)}, Tasks: {len(actions)}, Urgency: {urgency}')
         return MentionDetectionResponse(
             mentions=mentions,
@@ -191,6 +208,7 @@ async def detect_mentions(request: MentionDetectionRequest):
         )
 
     except Exception as e:
+        print(f'❌ [PYTHON] Error during mention detection: {str(e)}')
         logger.error(f'Error during mention detection: {str(e)}')
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -199,16 +217,12 @@ async def generate_alert(request: AlertGenerationRequest):
     """
     Generate an alert message for the user
     
-    Args:
-        message_text: Original message content
-        sender: Sender JID
-        group_id: Group JID
-        mentions: List of mentions detected
-    
-    Returns:
-        Formatted alert message and metadata
-    """
-    try:
+    Argsprint(f'📥 [PYTHON] Received generate-alert request')
+        print(f'   From sender: {request.sender}')
+        print(f'   Group ID: {request.group_id}')
+        print(f'   Mentions: {request.mentions}')
+        print(f'   Message: {request.message_text[:100]}...')
+        
         logger.debug(f'Generating alert for {request.group_id}')
         
         # Detect mentions and tasks
@@ -228,6 +242,21 @@ async def generate_alert(request: AlertGenerationRequest):
         if urgency == 'high':
             alert_parts.insert(0, '🔴 *HIGH PRIORITY*\n')
 
+        alert_text = '\n'.join(alert_parts) if alert_parts else f'Message from {request.sender.split("@")[0]} in {request.group_id}'
+        
+        print(f'✅ [PYTHON] Alert generated')
+        print(f'   Alert text: {alert_text}')
+        print(f'   Urgency: {urgency}')
+        
+        logger.info(f'✅ Alert generated (urgency: {urgency})')
+        return AlertGenerationResponse(
+            alert_text=alert_text,
+            mentioned_action=actions[0] if actions else None,
+            should_alert=len(mentions) > 0 or urgency in ['high', 'medium']
+        )
+
+    except Exception as e:
+        print(f'❌ [PYTHON] Error during alert generation: {str(e)}')
         alert_text = '\n'.join(alert_parts) if alert_parts else f'Message from {request.sender.split("@")[0]} in {request.group_id}'
         
         logger.info(f'✅ Alert generated (urgency: {urgency})')

@@ -30,6 +30,7 @@ async function processQueuePeriodically() {
 
     const message = processingQueue.shift()
     isProcessing = true
+    console.log('⏳ [DEBUG] Processing queue item:', message.messageId)
 
     try {
       // Respect rate limit
@@ -43,6 +44,7 @@ async function processQueuePeriodically() {
       await processMessage(message)
       lastProcessTime = Date.now()
     } catch (error) {
+      console.log('❌ [DEBUG] Error processing queued message:', error.message)
       logger.error('Error processing queued message:', error.message)
 
       if (message.retries < message.maxRetries) {
@@ -69,7 +71,8 @@ export function enqueueForProcessing(message) {
     retries: 0,
     maxRetries: 3,
   })
-  logger.debug(`Message enqueued for orchestration. Queue size: ${processingQueue.length}`)
+  console.log('✅ [DEBUG] Message enqueued:', message.text.substring(0, 50), `Queue size: ${processingQueue.length}`)
+  logger.info(`📥 Message enqueued for processing. Queue size: ${processingQueue.length}`)
 }
 
 /**
@@ -78,10 +81,12 @@ export function enqueueForProcessing(message) {
  */
 async function processMessage(message) {
   try {
-    logger.debug(`Processing message: ${message.messageId}`)
+    console.log('🔄 [DEBUG] Processing message:', message.messageId, message.text.substring(0, 50))
+    logger.info(`📤 Processing message: ${message.text.substring(0, 50)}...`)
 
     // 1. Check if message requires immediate alert (mentions detected)
     if (message.mentions.length > 0) {
+      console.log('🔔 [DEBUG] Mention detected:', message.mentions)
       logger.info(`🔔 Mention detected: ${message.mentions.join(', ')}`)
       
       const alertResponse = await callPythonService('/generate-alert', {
@@ -100,6 +105,7 @@ async function processMessage(message) {
 
     // 2. For longer messages, request summarization
     if (message.text.length > 500) {
+      console.log('📝 [DEBUG] Message exceeds 500 chars, requesting summarization')
       logger.debug('Message exceeds 500 chars, requesting summarization')
 
       const summaryResponse = await callPythonService('/summarize', {
@@ -115,9 +121,11 @@ async function processMessage(message) {
     }
 
     message.status = 'processed'
+    console.log('✅ [DEBUG] Message processed successfully')
     logger.info(`✅ Message processed successfully`)
 
   } catch (error) {
+    console.log('❌ [DEBUG] Error processing message:', error.message)
     logger.error(`Failed to process message ${message.messageId}:`, error.message)
     throw error
   }
@@ -133,6 +141,8 @@ async function callPythonService(endpoint, payload) {
   try {
     const url = `${PYTHON_SERVICE_URL}${endpoint}`
     
+    console.log(`📤 [NODE] Calling Python service: POST ${url}`)
+    console.log(`   Payload: ${JSON.stringify(payload, null, 2)}`)
     logger.debug(`Calling Python service: POST ${url}`)
 
     const response = await axios.post(url, payload, {
@@ -142,19 +152,25 @@ async function callPythonService(endpoint, payload) {
       },
     })
 
+    console.log(`✅ [NODE] Python response received (${response.status})`)
+    console.log(`   Data: ${JSON.stringify(response.data, null, 2)}`)
     logger.debug(`Python service response: ${response.status}`)
     return response.data
 
   } catch (error) {
     if (error.response) {
+      console.log(`❌ [NODE] Python service error: ${error.response.status}`)
+      console.log(`   Response: ${JSON.stringify(error.response.data, null, 2)}`)
       logger.error(`Python service error: ${error.response.status} - ${error.response.statusText}`, {
         data: error.response.data,
       })
       throw new Error(`Service error: ${error.response.status}`)
     } else if (error.code === 'ECONNREFUSED') {
+      console.log(`❌ [NODE] Python service is unavailable (connection refused)`)
       logger.error('Python service is unavailable (connection refused)')
       throw new Error('Python service unavailable')
     } else {
+      console.log(`❌ [NODE] Network error: ${error.message}`)
       logger.error('Network error calling Python service:', error.message)
       throw error
     }

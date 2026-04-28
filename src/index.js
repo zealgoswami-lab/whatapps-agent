@@ -523,14 +523,18 @@ let socket = null
 async function startApp() {
   try {
     logger.info('🚀 WhatsApp Agent starting...')
+    console.log('🚀 [DEBUG] WhatsApp Agent starting...')
 
     // Initialize Bailey WhatsApp session
     logger.info('📱 Initializing WhatsApp session...')
+    console.log('📱 [DEBUG] Initializing WhatsApp session...')
     socket = await initializeWhatsAppSession()
 
     // Setup message listener for incoming messages
     logger.info('👂 Setting up message listener...')
+    console.log('👂 [DEBUG] Setting up message listener...')
     setupMessageListener(socket, (message) => {
+      console.log('👂 [DEBUG] Message callback invoked:', message.messageId)
       enqueueForProcessing(message)
     })
 

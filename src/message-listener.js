@@ -47,6 +47,12 @@ function extractMentions(text) {
  */
 export function setupMessageListener(socket, messageCallback) {
   socket.on('message', (message) => {
+    console.log('🔔 [DEBUG] Message event fired:', {
+      fromMe: message.fromMe,
+      from: message.from,
+      body: message.body ? message.body.substring(0, 50) : '[empty]'
+    })
+
     // Skip if message is from us
     if (message.fromMe) {
       logger.debug('Skipping own message')
@@ -56,25 +62,24 @@ export function setupMessageListener(socket, messageCallback) {
     const prepared = prepareMessagePayload(message)
     
     if (!prepared) {
-      logger.debug('Skipped invalid/empty message')
+      console.log('⚠️ [DEBUG] Skipped invalid/empty message')
       return
     }
 
-    logger.info(
-      `📨 Message received`,
-      {
-        from: prepared.sender,
-        group: prepared.isGroup ? prepared.jid : 'DM',
-        text: prepared.text.substring(0, 100) + (prepared.text.length > 100 ? '...' : ''),
-        mentions: prepared.mentions,
-      }
-    )
+    console.log('✅ [DEBUG] Message prepared for processing:', prepared.text.substring(0, 50))
+    
+    logger.info(`📨 Message received from ${prepared.sender}`)
+    logger.info(`📝 Text: ${prepared.text.substring(0, 100)}${prepared.text.length > 100 ? '...' : ''}`)
+    if (prepared.mentions.length > 0) {
+      logger.info(`@️ Mentions: ${prepared.mentions.join(', ')}`)
+    }
 
     // Invoke the callback with prepared message
     messageCallback(prepared)
   })
 
   logger.info('✅ Message listener setup complete')
+  console.log('✅ [DEBUG] Message event listener registered on socket')
 }
 
 /**

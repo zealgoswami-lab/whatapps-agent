@@ -7,7 +7,9 @@ import logger from './logger.js'
 let socket = null
 let isConnectedFlag = false
 let reconnectAttempts = 0
+let qrCodeAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 5
+const MAX_QR_ATTEMPTS = 2 // Limit QR code generation to 2 attempts
 const BASE_RECONNECT_DELAY = 3000 // 3 seconds
 const QR_CODES_DIR = 'qr_codes'
 
@@ -31,8 +33,15 @@ export async function initializeWhatsAppSession() {
 
     // Handle QR code for authentication
     socket.on('qr', async (qr) => {
+      qrCodeAttempts++
       reconnectAttempts = 0 // Reset counter on new QR
-      logger.info('📱 QR Code received - generating QR code image...')
+      
+      if (qrCodeAttempts > MAX_QR_ATTEMPTS) {
+        logger.warn(`⚠️ QR code generation limited - already generated ${MAX_QR_ATTEMPTS} QR codes. Skipping additional attempts.`)
+        return
+      }
+      
+      logger.info(`📱 QR Code received (attempt ${qrCodeAttempts}/${MAX_QR_ATTEMPTS}) - generating QR code image...`)
       
       try {
         // Generate QR code as PNG image
